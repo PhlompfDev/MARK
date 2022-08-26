@@ -1,0 +1,1391 @@
+local plr = game:GetService("Players").LocalPlayer;
+local m = plr:GetMouse()
+local UIS = game:GetService("UserInputService");
+local TS = game:GetService('TweenService');
+local RS = game:GetService("RunService");
+local ti = TweenInfo.new;
+
+local UI = Instance.new("ScreenGui");
+(protectgui or syn.protect_gui or (function() end))(UI);
+UI.Parent = game:GetService("CoreGui");
+
+
+local LibMeta = {
+	FontColor = Color3.fromRGB(255, 255, 255);
+	Font = Enum.Font.GothamSemibold;
+	FontSize = Enum.FontSize.Size10;
+	PrimaryColor = Color3.fromRGB(244, 62, 93);
+	SecondaryColor = Color3.fromRGB(75, 42, 48);
+	
+	OpenTabs = {};
+	Tabs = {};
+	thingsToClose = {};
+	Sections = {};
+};
+local PrimaryColors = {};
+local SecondaryColors = {};
+local contents = {};
+
+local Library = setmetatable({}, { 
+	__newindex = function(table, key, value)
+		if key == "PrimaryColor" then
+			for item, properties in pairs(PrimaryColors) do
+				print(item, properties)
+				for _, property in ipairs(properties) do
+					--warn(item, property, type(value), value)
+					item[property] = value;
+				end
+			end
+		elseif key == "SecondaryColor" then
+			for item, properties in pairs(SecondaryColors) do
+				print(item, properties)
+				for _, property in ipairs(properties) do
+					--warn(item, property, type(value), value)
+					item[property] = value;
+				end
+			end
+		end
+		LibMeta[key] = value;
+	end,
+	__index = function(table, key)
+		return LibMeta[key];
+	end,
+})
+
+local function isHoveringOverObj(obj)
+	local tx = obj.AbsolutePosition.X
+	local ty = obj.AbsolutePosition.Y
+	local bx = tx + obj.AbsoluteSize.X
+	local by = ty + obj.AbsoluteSize.Y
+	if m.X >= tx and m.Y >= ty and m.X <= bx and m.Y <= by then
+		return true
+	end
+end
+
+local function CreateDrag(gui)
+	local dragging
+	local dragInput
+	local dragStart
+	local startPos
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		TS:Create(gui, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)}):Play();
+	end
+
+	gui.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = gui.Position
+
+			input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					for _, item in ipairs(Library.thingsToClose) do
+						if type(item) == 'table' and rawget(item, "Close") then
+							local can = true
+							for _, asd in ipairs(item.MainFrames) do
+								if isHoveringOverObj(asd) then
+									can = false
+								end 
+							end
+							if can then
+								item:Close();
+							end
+						end
+					end 
+				end
+			end)
+		end
+	end)
+
+	gui.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	UIS.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
+local Navigation, LeftBG, RightBG, Background, CBGImage, CoverBG; do
+	
+	--// Background
+	Background = Instance.new("Frame");
+	Background.BackgroundColor3 = Color3.fromRGB(23,22,22);
+	Background.Position = UDim2.fromOffset(235, 99);
+	Background.Size = UDim2.fromOffset(457, 650);
+	Background.Parent = UI;
+	CreateDrag(Background)
+	
+	local BGRounder = Instance.new("UICorner");
+	BGRounder.CornerRadius = UDim.new(0,6);
+	BGRounder.Parent = Background;
+	
+	local Header = Instance.new("ImageLabel");
+	Header.BackgroundTransparency = 1;
+	Header.Size = UDim2.new(1,0,0,39);
+	Header.Image = "rbxassetid://8369687170";
+	Header.Parent = Background;
+	
+	local EdgeHider = Instance.new("Frame");
+	EdgeHider.BackgroundColor3 = Color3.fromRGB(34, 32, 32);
+	EdgeHider.BorderSizePixel = 0;
+	EdgeHider.Position = UDim2.fromScale(0, 0.256)
+	EdgeHider.Size = UDim2.fromOffset(13, 23);
+	EdgeHider.Parent = Header;
+	
+	local EdgeHider = EdgeHider:Clone();
+	EdgeHider.Position = UDim2.new(0, 443, 0.256, 0);
+	EdgeHider.Parent = Header
+	
+	local TopRounder = EdgeHider:Clone();
+	TopRounder.Position = UDim2.fromOffset(0, -3);
+	TopRounder.Size = UDim2.fromOffset(457, 22);
+	TopRounder.Parent = Header;
+	
+	local RounderCornerUI = Instance.new("UICorner");
+	RounderCornerUI.CornerRadius = UDim.new(0, 8);
+	RounderCornerUI.Parent = TopRounder;
+	
+	local Title = Instance.new("TextLabel");
+	Title.BackgroundTransparency = 1;
+	Title.Size = UDim2.fromOffset(185, 36);
+	Title.Position = UDim2.fromOffset(0, -3);
+	Title.Font = Library.Font;
+	Title.FontSize = Enum.FontSize.Size18;
+	Title.Text = "AFS | By Phoenixx";
+	Title.TextColor3 = Library.PrimaryColor;
+	Title.Parent = Header;
+
+	PrimaryColors[Title] = {"TextColor3"};
+	
+	--// Navigation
+	Navigation = Instance.new("ImageLabel");
+	Navigation.BackgroundTransparency = 1;
+	Navigation.Position = UDim2.fromOffset(9, 36);
+	Navigation.Size = UDim2.fromOffset(0, 46);
+	Navigation.Image = "rbxassetid://8369731149";
+	Navigation.AutomaticSize = Enum.AutomaticSize.X;
+	Navigation.Parent = Background;
+	
+	local listLay = Instance.new("UIListLayout");
+	listLay.FillDirection = Enum.FillDirection.Horizontal;
+	listLay.HorizontalAlignment = Enum.HorizontalAlignment.Left;
+	listLay.SortOrder = Enum.SortOrder.LayoutOrder
+	listLay.Parent = Navigation;
+	
+	local uiPad = Instance.new("UIPadding");
+	uiPad.PaddingLeft = UDim.new(0,7);
+	uiPad.PaddingRight = UDim.new(0,7);
+	uiPad.PaddingTop = UDim.new(0,5);
+	uiPad.Parent = Navigation;
+	
+	CBGImage = Instance.new("ImageLabel");
+	CBGImage.BackgroundTransparency = 1;
+	CBGImage.AnchorPoint = Vector2.new(0.5, 0);
+	CBGImage.Position = UDim2.fromOffset(228, 80);
+	CBGImage.Size = UDim2.fromOffset(450, 559 + 2);
+	CBGImage.Image = "rbxassetid://8369879448";
+	CBGImage.ScaleType = Enum.ScaleType.Crop;
+	CBGImage.Parent = Background;
+	
+	CoverBG = Instance.new("Frame")
+	CoverBG.BackgroundColor3 = Color3.fromRGB(47, 44, 44);
+	CoverBG.BorderSizePixel = 0;
+	CoverBG.AnchorPoint = Vector2.new(0, 0.5);
+	CoverBG.Size = UDim2.fromScale(0,1);
+	CoverBG.Position = UDim2.fromScale(0,0.5);
+	CoverBG.ZIndex = 3;
+	CoverBG.Parent = CBGImage
+end
+
+function Library:CreateSearch(Title, IconId)
+
+	local Funcs = {
+		isOpen = false;	
+		tweenTime = 0.2;
+		LeftTabs = {};
+		RightTabs = {};
+		cooldown = 0.5;
+		lastChanged = 0;
+		mySections = {};
+	};
+
+	--// ContentBG
+	local ContentBG = Instance.new("Frame");
+	ContentBG.BackgroundTransparency = 1;
+	ContentBG.AnchorPoint = Vector2.new(0.5, 0.5);
+	ContentBG.Position = UDim2.fromScale(.5, .5);
+	ContentBG.Size = UDim2.fromScale(1, 1);
+	ContentBG.Parent = CBGImage;
+
+	LeftBG = Instance.new("Frame");
+	LeftBG.BackgroundTransparency = 1;
+	LeftBG.Size = UDim2.fromScale(0.512, 1);
+	LeftBG.Parent = ContentBG;
+
+	local listLay = Instance.new("UIListLayout");
+	listLay.FillDirection = Enum.FillDirection.Vertical;
+	listLay.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+	listLay.VerticalAlignment = Enum.VerticalAlignment.Top;
+	listLay.SortOrder = Enum.SortOrder.LayoutOrder;
+	listLay.Padding = UDim.new(0, 10);
+	listLay.Parent = LeftBG;
+
+	local uiPad = Instance.new("UIPadding");
+	uiPad.PaddingTop = UDim.new(0,12);
+	uiPad.Parent = LeftBG;
+
+	RightBG = LeftBG:Clone();
+	RightBG.Position = UDim2.fromScale(1,0);
+	RightBG.AnchorPoint = Vector2.new(1,0);
+	RightBG.Parent = ContentBG;
+	
+	local SearchBarBG = Instance.new("ImageButton");
+	SearchBarBG.BackgroundTransparency = 1;
+	SearchBarBG.AnchorPoint = Vector2.new(0,0.5);
+	SearchBarBG.Size = UDim2.fromOffset(0, 31);
+	SearchBarBG.Image = "rbxassetid://8369751711";
+	SearchBarBG.ClipsDescendants = true;
+	SearchBarBG.ImageColor3 = Color3.fromRGB(255, 255, 255);
+	SearchBarBG.Parent = Navigation;
+
+	local SearchBar = Instance.new("TextBox");
+	SearchBar.BackgroundTransparency = 1;
+	SearchBar.BorderSizePixel = 0;
+	SearchBar.Size = UDim2.new(1,-10,1,-2);
+	SearchBar.AnchorPoint = Vector2.new(0, 0.5);
+	SearchBar.Position = UDim2.new(0, 10, 0.5, -2);
+	SearchBar.TextColor3 = Color3.fromRGB(230,230,230);
+	SearchBar.FontSize = Enum.FontSize.Size10;
+	SearchBar.Font = Library.Font;
+	SearchBar.Text = ""
+	SearchBar.PlaceholderText = "Search..."
+	SearchBar.PlaceholderColor3 = Color3.fromRGB(132, 132, 132);
+	SearchBar.TextXAlignment = Enum.TextXAlignment.Left;
+	SearchBar.TextYAlignment = Enum.TextYAlignment.Center;
+	SearchBar.Visible = false
+	SearchBar.Parent = SearchBarBG;
+
+	local TabButton = Instance.new("ImageButton");
+	TabButton.BackgroundTransparency = 1;
+	TabButton.AnchorPoint = Vector2.new(0,0.5);
+	TabButton.Size = UDim2.fromOffset(29, 31);
+	TabButton.Image = "rbxassetid://8369751711";
+	TabButton.ClipsDescendants = true;
+	TabButton.ImageColor3 = Color3.fromRGB(229, 229, 229);
+	TabButton.Parent = Navigation;
+
+	local IconImg = Instance.new("ImageLabel");
+	IconImg.BackgroundTransparency = 1;
+	IconImg.AnchorPoint = Vector2.new(0.5, 0.5);
+	IconImg.Position = UDim2.fromOffset(15, 12);
+	IconImg.Size = UDim2.fromOffset(14,14);
+	IconImg.Image = "rbxassetid://"..tostring(IconId or "6034837797"):gsub("rbxassetid://", "");
+	IconImg.ImageColor3 = Library.SecondaryColor;
+	IconImg.Parent = TabButton;
+
+	SecondaryColors[IconImg] = {"ImageColor3"};
+	
+	local function clearSearch()
+		for _, dat in ipairs(Funcs.mySections) do
+			dat.Cont.Parent = dat.Parent
+		end
+		Funcs.mySections = {};
+		Funcs.RightTabs = {};
+		Funcs.LeftTabs = {};
+		
+		SearchBar.Text = "";
+	end
+	
+	SearchBar.FocusLost:Connect(function()
+		local toSearch = SearchBar.Text:lower()
+		if toSearch:gsub(" ", "") == "" then return end
+		
+		clearSearch();
+		
+		for title, tab in pairs(Library.Sections) do
+			warn(title, toSearch)
+			if title:lower():find(toSearch) then
+				local sec = tab.Cont
+				table.insert(Funcs.mySections, tab)
+				
+				if #Funcs.LeftTabs > #Funcs.RightTabs then
+					tab.Cont.Parent = RightBG;
+					table.insert(Funcs.RightTabs, tab.Cont);
+				else
+					tab.Cont.Parent = LeftBG;
+					table.insert(Funcs.LeftTabs, tab.Cont);
+				end
+			end
+		end
+	end)
+	
+	function Funcs:Open()
+		Funcs.isOpen = true;
+
+		SecondaryColors[IconImg] = nil;
+		PrimaryColors[IconImg] = {"ImageColor3"};
+
+		TS:Create(SearchBarBG, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(120, 31)}):Play();
+		TS:Create(TabButton, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play();
+		TS:Create(IconImg, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageColor3 = Library.PrimaryColor}):Play();
+
+		CoverBG.Position = UDim2.fromScale(0, 0.5);
+		CoverBG:TweenSize(UDim2.fromScale(1,1), Enum.EasingDirection.Out, Enum.EasingStyle.Sine, Funcs.tweenTime - 0.1);
+
+		coroutine.resume(coroutine.create(function()
+			task.wait(Funcs.tweenTime - 0.1);
+			SearchBar.Visible = true
+
+			for _, tab in ipairs(Library.Tabs) do
+				if tab.TabButton ~= TabButton then
+					tab.Funcs:Close();
+				end
+			end
+
+			ContentBG.Visible = true;
+
+			CoverBG:TweenSizeAndPosition(UDim2.fromScale(0,1), UDim2.fromScale(1,0.5), Enum.EasingDirection.Out, Enum.EasingStyle.Sine, Funcs.tweenTime - 0.1);
+		end))
+	end
+
+	function Funcs:Close()
+		Funcs.isOpen = false;
+		clearSearch();
+		ContentBG.Visible = false;
+
+		PrimaryColors[IconImg] = nil;
+		SecondaryColors[IconImg] = {"ImageColor3"};
+
+		TS:Create(SearchBarBG, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(0, 31)}):Play();
+		TS:Create(TabButton, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(229, 229, 229)}):Play();
+		TS:Create(IconImg, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageColor3 = Library.SecondaryColor}):Play();
+		
+		task.wait(0.1)
+		SearchBar.Visible = false
+	end
+
+	TabButton.MouseButton1Down:Connect(function()
+		if not Funcs.isOpen and Funcs.lastChanged + Funcs.cooldown <= os.time() then
+			Funcs.lastChanged = os.time();
+			Funcs:Open();
+		end
+	end)
+
+	table.insert(Library.Tabs, {
+		TabButton = TabButton;
+		ContentBG = ContentBG,
+		Funcs = Funcs;
+	})
+
+	return Funcs;
+end
+
+function Library:CreateTab(Title, IconId)
+	
+	local Funcs = {
+		isOpen = false;	
+		tweenTime = 0.2;
+		LeftTabs = {};
+		RightTabs = {};
+		cooldown = 0.5;
+		lastChanged = 0;
+	};
+	
+	--// ContentBG
+	local ContentBG = Instance.new("Frame");
+	ContentBG.BackgroundTransparency = 1;
+	ContentBG.AnchorPoint = Vector2.new(0.5, 0.5);
+	ContentBG.Position = UDim2.fromScale(.5, .5);
+	ContentBG.Size = UDim2.fromScale(1, 1);
+	ContentBG.Parent = CBGImage;
+	
+	LeftBG = Instance.new("Frame");
+	LeftBG.BackgroundTransparency = 1;
+	LeftBG.Size = UDim2.fromScale(0.512, 1);
+	LeftBG.Parent = ContentBG;
+
+	local listLay = Instance.new("UIListLayout");
+	listLay.FillDirection = Enum.FillDirection.Vertical;
+	listLay.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+	listLay.VerticalAlignment = Enum.VerticalAlignment.Top;
+	listLay.SortOrder = Enum.SortOrder.LayoutOrder;
+	listLay.Padding = UDim.new(0, 10);
+	listLay.Parent = LeftBG;
+
+	local uiPad = Instance.new("UIPadding");
+	uiPad.PaddingTop = UDim.new(0,12);
+	uiPad.Parent = LeftBG;
+
+
+	RightBG = LeftBG:Clone();
+	RightBG.Position = UDim2.fromScale(1,0);
+	RightBG.AnchorPoint = Vector2.new(1,0);
+	RightBG.Parent = ContentBG;
+	
+	local TabButton = Instance.new("ImageButton");
+	TabButton.BackgroundTransparency = 1;
+	TabButton.AnchorPoint = Vector2.new(0,0.5);
+	TabButton.Size = UDim2.fromOffset(34, 31);
+	TabButton.Image = "rbxassetid://8369751711";
+	TabButton.ClipsDescendants = true;
+	TabButton.ImageColor3 = Color3.fromRGB(229, 229, 229);
+	TabButton.Parent = Navigation;
+	
+	local IconImg = Instance.new("ImageLabel");
+	IconImg.BackgroundTransparency = 1;
+	IconImg.AnchorPoint = Vector2.new(0.5, 0.5);
+	IconImg.Position = UDim2.fromOffset(15, 12);
+	IconImg.Size = UDim2.fromOffset(14,14);
+	IconImg.Image = "rbxassetid://"..tostring(IconId or "6034837797"):gsub("rbxassetid://", "");
+	IconImg.ImageColor3 = Library.SecondaryColor;
+	IconImg.Parent = TabButton;
+	
+	SecondaryColors[IconImg] = {"ImageColor3"};
+	
+	local TabTitle = Instance.new("TextLabel");
+	TabTitle.BackgroundTransparency = 1;
+	TabTitle.Position = UDim2.fromOffset(30, 5);
+	TabTitle.Size = UDim2.fromOffset(0, 18)
+	TabTitle.Font = Library.Font;
+	TabTitle.Text = tostring(Title or "Tab");
+	TabTitle.FontSize = Enum.FontSize.Size10;
+	TabTitle.TextColor3 = Library.FontColor;
+	TabTitle.TextTransparency = 1;
+	TabTitle.Parent = TabButton;
+	
+	--// Components
+	
+	function Funcs:Section(Title, IconId)
+		local sFuncs = {};
+		
+		local sContainer = Instance.new("ImageLabel");
+		sContainer.AnchorPoint = Vector2.new(0.5,0)
+		sContainer.BackgroundTransparency = 1;
+		sContainer.ScaleType = Enum.ScaleType.Crop;
+		sContainer.Size = UDim2.fromOffset(215, 0);
+		sContainer.Image = "rbxassetid://8370082392";
+		sContainer.AutomaticSize = Enum.AutomaticSize.Y;
+		
+		if #Funcs.LeftTabs > #Funcs.RightTabs then
+			sContainer.Parent = RightBG;
+			table.insert(Funcs.RightTabs, sContainer);
+		else
+			sContainer.Parent = LeftBG;
+			table.insert(Funcs.LeftTabs, sContainer);
+		end
+
+		Library.Sections[Title] = {Cont = sContainer, Parent = sContainer.Parent}
+		
+		local sHeader = Instance.new("Frame");
+		sHeader.AnchorPoint = Vector2.new(0.5,0)
+		sHeader.BackgroundColor3 = Color3.fromRGB(23, 22, 22);
+		sHeader.Position = UDim2.new(0.5, 0, 0, -6);
+		sHeader.Size= UDim2.fromOffset(209, 23);
+		sHeader.Parent = sContainer
+		
+		local RounderCornerUI = Instance.new("UICorner");
+		RounderCornerUI.CornerRadius = UDim.new(0, 4);
+		RounderCornerUI.Parent = sHeader;
+
+		local EdgeHider = Instance.new("Frame");
+		EdgeHider.BackgroundColor3 = Color3.fromRGB(23, 22, 22);
+		EdgeHider.BorderSizePixel = 0;
+		EdgeHider.Position = UDim2.fromOffset(0, 13)
+		EdgeHider.Size = UDim2.fromOffset(22, 10);
+		EdgeHider.Parent = sHeader;
+		
+		local EdgeHider = EdgeHider:Clone();
+		EdgeHider.Position = UDim2.fromOffset(183, 13);
+		EdgeHider.Size = UDim2.fromOffset(14, 10);
+		EdgeHider.Parent = sHeader;
+		
+		
+		local IconImg = Instance.new("ImageLabel");
+		IconImg.BackgroundTransparency = 1;
+		IconImg.AnchorPoint = Vector2.new(0, 0.5);
+		IconImg.Position = UDim2.new(0, 8, 0.5, 0);
+		IconImg.Size = UDim2.fromOffset(14,14);
+		IconImg.Image = "rbxassetid://"..tostring(IconId or "6034837797"):gsub("rbxassetid://", "");
+		IconImg.ImageColor3 = Library.PrimaryColor;
+		IconImg.ScaleType = Enum.ScaleType.Fit;
+		IconImg.Parent = sHeader;
+
+		PrimaryColors[IconImg] = {"ImageColor3"};
+
+		local secTitle = Instance.new("TextLabel");
+		secTitle.BackgroundTransparency = 1;
+		secTitle.Position = UDim2.fromOffset(27, 0);
+		secTitle.Size = UDim2.fromOffset(138, 24)
+		secTitle.Font = Library.Font;
+		secTitle.Text = tostring(Title or "Section");
+		secTitle.FontSize = Enum.FontSize.Size12;
+		secTitle.TextColor3 = Library.FontColor;
+		secTitle.TextXAlignment = Enum.TextXAlignment.Left;
+		secTitle.Parent = sHeader;
+		
+
+		local OptionsHolder = Instance.new("Frame");
+		OptionsHolder.AutomaticSize = Enum.AutomaticSize.Y;
+		OptionsHolder.BackgroundTransparency = 1;
+		OptionsHolder.BackgroundColor3 = Color3.fromRGB(23, 22, 22);
+		OptionsHolder.Position = UDim2.fromOffset(2, 22);
+		OptionsHolder.Size= UDim2.fromOffset(215, 0);
+		OptionsHolder.Parent = sContainer
+
+		local listLay = Instance.new("UIListLayout");
+		listLay.FillDirection = Enum.FillDirection.Vertical;
+		listLay.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+		listLay.VerticalAlignment = Enum.VerticalAlignment.Top;
+		listLay.SortOrder = Enum.SortOrder.LayoutOrder;
+		listLay.Padding = UDim.new(0, 6);
+		listLay.Parent = OptionsHolder;
+
+		local uiPad = Instance.new("UIPadding");
+		uiPad.PaddingTop = UDim.new(0,2);
+		uiPad.PaddingBottom = UDim.new(0,10);
+		uiPad.Parent = OptionsHolder;
+		
+		function sFuncs:Toggle(Title, default, Callback)
+			local toggleFuncs = {
+				Enabled = false;	
+				tweenTime = 0.2;
+			};
+			
+			local btn = Instance.new("TextButton");
+			btn.AutoButtonColor = false;
+			btn.BackgroundTransparency = 1;
+			btn.Size = UDim2.fromOffset(215, 15);
+			btn.Text = "";
+			btn.Parent = OptionsHolder;
+			
+			
+			local OutlineIcon = Instance.new("ImageLabel");
+			OutlineIcon.BackgroundTransparency = 1;
+			OutlineIcon.Position = UDim2.new(0,8,0.5,0)
+			OutlineIcon.Size = UDim2.fromOffset(14,14)
+			OutlineIcon.AnchorPoint = Vector2.new(0,0.5)
+			OutlineIcon.Image = "rbxassetid://8370469048";
+			OutlineIcon.ImageColor3 = Library.SecondaryColor;
+			OutlineIcon.Parent = btn;
+
+			SecondaryColors[OutlineIcon] = {"ImageColor3"};
+			
+			local InnerIcon = Instance.new("Frame");
+			InnerIcon.BackgroundColor3 = Library.PrimaryColor;
+			InnerIcon.AnchorPoint = Vector2.new(0.5,0.5);
+			InnerIcon.Position = UDim2.fromScale(0.5,0.5);
+			InnerIcon.Size = UDim2.new(0,0,0,0);--UDim2.new(1,-2,1,-2);
+			InnerIcon.BackgroundTransparency = 1
+			InnerIcon.Parent = OutlineIcon;
+
+			PrimaryColors[InnerIcon] = {"BackgroundColor3"};
+			
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 2);
+			RounderCornerUI.Parent = InnerIcon;
+
+			local TogTitle = Instance.new("TextLabel");
+			TogTitle.AnchorPoint = Vector2.new(0,0.5)
+			TogTitle.BackgroundTransparency = 1;
+			TogTitle.Position = UDim2.new(0,30,0.5,0);
+			TogTitle.Size = UDim2.new(0, 146, 1, 0)
+			TogTitle.Font = Library.Font;
+			TogTitle.Text = tostring(Title or "Toggle");
+			TogTitle.FontSize = Enum.FontSize.Size10;
+			TogTitle.TextColor3 = Color3.fromRGB(150, 150, 150);
+			TogTitle.TextXAlignment = Enum.TextXAlignment.Left;
+			TogTitle.Parent = btn;
+			
+			function toggleFuncs:Enable()
+				toggleFuncs.Enabled = true;
+				TS:Create(InnerIcon, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.new(1,-2,1,-2), BackgroundTransparency = 0}):Play();
+				TS:Create(TogTitle, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play();
+			end
+			
+			function toggleFuncs:Disable()
+				toggleFuncs.Enabled = false;
+				TS:Create(InnerIcon, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.new(0,0,0,0), BackgroundTransparency = 1}):Play();
+				TS:Create(TogTitle, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play();
+			end
+			
+			btn.MouseButton1Down:Connect(function()
+				if toggleFuncs.Enabled then
+					toggleFuncs:Disable();
+				else
+					toggleFuncs:Enable();
+				end
+				Callback(toggleFuncs.Enabled);
+			end)
+			
+			return toggleFuncs;
+		end
+		
+		function sFuncs:Slider(Title, default, min, max, suffix, Callback)
+			local toggleFuncs = {	
+				tweenTime = 0.2;
+			};
+
+			local btn = Instance.new("TextButton");
+			btn.AutoButtonColor = false;
+			btn.BackgroundTransparency = 1;
+			btn.Size = UDim2.fromOffset(215, 30);
+			btn.Text = "";
+			btn.Parent = OptionsHolder;
+
+			local BarBG = Instance.new("Frame");
+			BarBG.Position = UDim2.new(0,106,0,17)
+			BarBG.Size = UDim2.fromOffset(196,14)
+			BarBG.AnchorPoint = Vector2.new(0.5,0)
+			BarBG.BackgroundColor3 = Library.SecondaryColor;
+			BarBG.Parent = btn;
+
+			SecondaryColors[BarBG] = {"BackgroundColor3"};
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 2);
+			RounderCornerUI.Parent = BarBG;
+
+			local InlineBG = Instance.new("Frame");
+			InlineBG.BackgroundColor3 = Color3.fromRGB(26, 26, 26);
+			InlineBG.AnchorPoint = Vector2.new(0.5,0.5);
+			InlineBG.Position = UDim2.fromScale(0.5,0.5);
+			InlineBG.Size = UDim2.new(1,-2,1,-2);
+			InlineBG.BorderSizePixel = 0;
+			InlineBG.Parent = BarBG;
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 2);
+			RounderCornerUI.Parent = InlineBG;
+
+			local InnerBar = Instance.new("Frame");
+			InnerBar.BackgroundColor3 = Library.PrimaryColor;
+			InnerBar.AnchorPoint = Vector2.new(0,0.5);
+			InnerBar.Position = UDim2.new(0, 0.99, 0.5, 0);
+			InnerBar.Size = UDim2.new(tonumber(default or min or 10)/100, 0, 1, -2);
+			InnerBar.BorderSizePixel = 0;
+			InnerBar.Parent = InlineBG;
+
+			PrimaryColors[InnerBar] = {"BackgroundColor3"};
+			
+			local TogTitle = Instance.new("TextLabel");
+			TogTitle.BackgroundTransparency = 1;
+			TogTitle.Position = UDim2.new(0,8,0,2);
+			TogTitle.Size = UDim2.new(0, 91, 0, 13);
+			TogTitle.Font = Library.Font;
+			TogTitle.Text = tostring(Title or "Slider");
+			TogTitle.FontSize = Enum.FontSize.Size10;
+			TogTitle.TextColor3 = Library.FontColor;
+			TogTitle.TextXAlignment = Enum.TextXAlignment.Left;
+			TogTitle.TextYAlignment = Enum.TextYAlignment.Top;
+			TogTitle.Parent = btn;
+			
+			local PercTitle = TogTitle:Clone();
+			PercTitle.Position = UDim2.fromOffset(113, 2);
+			PercTitle.TextXAlignment = Enum.TextXAlignment.Right;
+			PercTitle.TextColor3 = Color3.fromRGB(150, 150, 150);
+			PercTitle.Text = tostring(default)..tostring(suffix or "%");
+			PercTitle.Parent = btn;
+			
+			
+			
+			local Value = 0
+
+			local Connection;
+			UIS.InputEnded:Connect(function(input)
+				if input.UserInputType == Enum.UserInputType.MouseButton1 then
+					if(Connection) then
+						TS:Create(PercTitle, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play();
+						Connection:Disconnect();
+						Connection = nil;
+					end;
+				end;
+			end);
+
+			btn.MouseButton1Down:Connect(function()
+				if(Connection) then
+					Connection:Disconnect();
+				end;
+				TS:Create(PercTitle, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play();
+
+				Connection = RS.Heartbeat:Connect(function()
+					local mouse = UIS:GetMouseLocation();
+					local percent = math.clamp((mouse.X - BarBG.AbsolutePosition.X) / (BarBG.AbsoluteSize.X), 0, 1);
+					local Value = min + (max - min) * percent;
+
+					local NewValue = percent * 99.9
+					InnerBar:TweenSize(UDim2.new(NewValue/100, 0, 0.99, 0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.1,true,nil)
+
+					Value = tonumber(string.format("%.2f", math.floor(Value)));
+
+					PercTitle.Text = Value..tostring(suffix or "")
+
+					pcall(Callback, Value) 
+				end);
+			end);
+
+			function toggleFuncs:Set(val)
+				print(val, max, val/max)
+				local percent = (val/max);
+				local Value = val;
+				
+				local NewValue = percent * 99.9
+				InnerBar:TweenSize(UDim2.new(NewValue/100, 0, 0.99, 0),Enum.EasingDirection.Out,Enum.EasingStyle.Quad,0.1,true,nil)
+
+				PercTitle.Text = Value..tostring(suffix or "")
+				
+				pcall(Callback, Value) 
+			end
+			
+			toggleFuncs:Set(default or 0)
+
+			return toggleFuncs;
+		end
+		
+		function sFuncs:Dropdown(Title, list, default, Callback)
+			local toggleFuncs = {
+				tweenTime = 0.2;
+				DroppedFrame = nil;
+				cooldown = 0.5;
+				lastTimed = 0;
+				MainFrames = nil;
+			};
+			list = list or {"N/A"};
+			Callback = Callback or function() end;
+
+			local btn = Instance.new("TextButton");
+			btn.AutoButtonColor = false;
+			btn.BackgroundTransparency = 1;
+			btn.Size = UDim2.fromOffset(215, 0);
+			btn.AutomaticSize = Enum.AutomaticSize.Y;
+			btn.Text = "";
+			btn.Parent = OptionsHolder;
+			toggleFuncs.MainFrames = {btn};
+			
+			local Selected = Instance.new("TextLabel");
+			Selected.AnchorPoint = Vector2.new(0.5,0);
+			Selected.BorderSizePixel = 0;
+			Selected.BackgroundColor3 = Color3.fromRGB(34,32,32);
+			Selected.Position = UDim2.fromOffset(98, 16);
+			Selected.Size = UDim2.fromOffset(180, 14);
+			Selected.Font = Library.Font;
+			Selected.Text = tostring(default or "Select");
+			Selected.TextColor3 = Library.FontColor;
+			Selected.FontSize = Enum.FontSize.Size8;
+			Selected.ZIndex = 2
+			Selected.Parent = btn;
+			
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 3);
+			RounderCornerUI.Parent = Selected;
+			
+			local DropImg = Instance.new("ImageLabel");
+			DropImg.AnchorPoint = Vector2.new(0.5,0);
+			DropImg.BorderSizePixel = 0;
+			DropImg.BackgroundColor3 = Color3.fromRGB(34,32,32);
+			DropImg.Position = UDim2.fromOffset(198, 16);
+			DropImg.Size = UDim2.fromOffset(14, 14);
+			DropImg.Image = "rbxassetid://6034818379";
+			DropImg.ImageColor3 = Library.PrimaryColor;
+			DropImg.Rotation = 180;
+			DropImg.Parent = btn;
+			
+			PrimaryColors[DropImg] = {"ImageColor3"};
+			
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 3);
+			RounderCornerUI.Parent = DropImg;
+
+
+			local TogTitle = Instance.new("TextLabel");
+			TogTitle.BackgroundTransparency = 1;
+			TogTitle.Position = UDim2.new(0,8,0,2);
+			TogTitle.Size = UDim2.new(0, 79, 0, 13);
+			TogTitle.Font = Library.Font;
+			TogTitle.Text = tostring(Title or "Dropdown");
+			TogTitle.FontSize = Enum.FontSize.Size10;
+			TogTitle.TextColor3 = Library.FontColor;
+			TogTitle.TextXAlignment = Enum.TextXAlignment.Left;
+			TogTitle.TextYAlignment = Enum.TextYAlignment.Top;
+			TogTitle.Parent = btn;
+			
+			function toggleFuncs:Close()
+				if toggleFuncs.DroppedFrame then
+					DropImg.Rotation = 180;
+					for _, btn in ipairs(toggleFuncs.DroppedFrame:FindFirstChildOfClass("Frame"):GetChildren()) do
+						if btn:IsA("TextButton") then 
+							coroutine.resume(coroutine.create(function()
+								TS:Create(btn, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 1, Size = UDim2.new(1,0,0,0)}):Play();
+							end))
+						end
+					end
+					
+					task.wait(toggleFuncs.tweenTime - 0.08)
+
+					TS:Create(toggleFuncs.DroppedFrame, ti(toggleFuncs.tweenTime - 0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play();
+					
+					task.wait(toggleFuncs.tweenTime - 0.1)
+					
+					TS:Create(toggleFuncs.DroppedFrame:FindFirstChildOfClass("Frame"), ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play();
+					
+					task.wait(toggleFuncs.tweenTime - 0.08)
+					
+					if toggleFuncs.DroppedFrame then
+						toggleFuncs.DroppedFrame:Destroy()
+						toggleFuncs.DroppedFrame = nil;
+					end
+				end
+			end
+			
+			
+			function toggleFuncs:Open()
+				if toggleFuncs.lastTimed + toggleFuncs.cooldown > os.time() then return end
+				toggleFuncs.lastTimed = os.time();
+				DropImg.Rotation = 0;
+				if toggleFuncs.DroppedFrame then
+					toggleFuncs:Close()
+				else
+					local dpframe = Instance.new("Frame");
+					dpframe.AnchorPoint = Vector2.new(0.5,0);
+					dpframe.BackgroundColor3 = Color3.fromRGB(24, 24, 24);
+					dpframe.BackgroundTransparency = 0.875
+					dpframe.BorderSizePixel = 0;
+					dpframe.Position = UDim2.fromOffset(Selected.AbsolutePosition.X + Selected.AbsoluteSize.X/2, Selected.AbsolutePosition.Y) + UDim2.fromOffset(0,0);
+					dpframe.Size = UDim2.fromOffset(182, 0);
+					dpframe.AutomaticSize = Enum.AutomaticSize.Y;
+					dpframe.Parent = UI;
+					toggleFuncs.DroppedFrame = dpframe;
+
+					local RounderCornerUI = Instance.new("UICorner");
+					RounderCornerUI.CornerRadius = UDim.new(0, 4);
+					RounderCornerUI.Parent = dpframe;
+
+					local listLay = Instance.new("UIListLayout");
+					listLay.FillDirection = Enum.FillDirection.Vertical;
+					listLay.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+					listLay.VerticalAlignment = Enum.VerticalAlignment.Top;
+					listLay.SortOrder = Enum.SortOrder.LayoutOrder;
+					listLay.Padding = UDim.new(0, 2);
+					listLay.Parent = dpframe;
+
+					local uiPad = Instance.new("UIPadding");
+					uiPad.PaddingLeft = UDim.new(0,1);
+					uiPad.PaddingRight = UDim.new(0,1);
+					uiPad.PaddingTop = UDim.new(0,1);
+					uiPad.PaddingBottom = UDim.new(0,1);
+					uiPad.Parent = dpframe;
+
+					local dpframeCont = Instance.new("Frame");
+					dpframeCont.AnchorPoint = Vector2.new(0.5,0);
+					dpframeCont.BackgroundColor3 = Color3.fromRGB(34, 32, 32);
+					dpframeCont.BorderSizePixel = 0;
+					dpframeCont.BackgroundTransparency = 1;
+					dpframeCont.Size = UDim2.fromOffset(180, 0);
+					dpframeCont.AutomaticSize = Enum.AutomaticSize.Y;
+					dpframeCont.Parent = dpframe;
+					
+
+					local RounderCornerUI = Instance.new("UICorner");
+					RounderCornerUI.CornerRadius = UDim.new(0, 4);
+					RounderCornerUI.Parent = dpframeCont;
+
+					local listLay = Instance.new("UIListLayout");
+					listLay.FillDirection = Enum.FillDirection.Vertical;
+					listLay.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+					listLay.VerticalAlignment = Enum.VerticalAlignment.Center;
+					listLay.SortOrder = Enum.SortOrder.LayoutOrder;
+					listLay.Padding = UDim.new(0, 3);
+					listLay.Parent = dpframeCont;
+
+					local uiPad = Instance.new("UIPadding");
+					uiPad.PaddingTop = UDim.new(0,17);
+					uiPad.PaddingBottom = UDim.new(0,2);
+					uiPad.Parent = dpframeCont;
+					
+					TS:Create(dpframe, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 0.125}):Play();
+
+
+					if type(list) == "function" then
+						list = list();
+					end
+					
+					local buttons = {};
+
+					if type(list) == "table" then
+						for _, text in ipairs(list) do
+							local tButton = Instance.new("TextButton");
+							tButton.BackgroundColor3 = Color3.fromRGB(29, 27, 27)
+							tButton.AutoButtonColor = false;
+							tButton.Size = UDim2.new(1,0,0,0);
+							tButton.Font = Library.Font;
+							tButton.FontSize = Enum.FontSize.Size8;
+							tButton.Text = tostring(text or "N/A?");
+							tButton.TextTransparency = 1;
+							tButton.BorderSizePixel = 0;
+							tButton.TextColor3 = Library.FontColor;
+							tButton.Parent = dpframeCont;
+							
+							local RounderCornerUI = Instance.new("UICorner");
+							RounderCornerUI.CornerRadius = UDim.new(0, 4);
+							RounderCornerUI.Parent = tButton;
+							
+							table.insert(buttons, tButton)
+							
+							tButton.MouseButton1Down:Connect(function()
+								Selected.Text = text;
+								pcall(Callback, text);
+								toggleFuncs:Close();
+							end)
+						end
+					end
+					
+					if #buttons > 0 then
+						for _, btn in ipairs(buttons) do
+							coroutine.resume(coroutine.create(function()
+								TS:Create(btn, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {TextTransparency = 0, Size = UDim2.new(1,0,0,14)}):Play();
+							end))
+						end
+					end
+				end
+			end
+			
+			table.insert(Library.thingsToClose, toggleFuncs)
+			
+			btn.MouseButton1Down:Connect(toggleFuncs.Open)
+			
+
+			return toggleFuncs;
+		end
+		
+		function sFuncs:Button(Title, Callback)
+			local toggleFuncs = {
+			};
+			Callback = Callback or function() end;
+
+			local btn = Instance.new("TextButton");
+			btn.AutoButtonColor = false;
+			btn.BackgroundTransparency = 1;
+			btn.Size = UDim2.fromOffset(215, 0);
+			btn.AutomaticSize = Enum.AutomaticSize.Y;
+			btn.Text = "";
+			btn.Parent = OptionsHolder;
+			toggleFuncs.MainFrames = {btn};
+
+			local Selected = Instance.new("TextButton");
+			Selected.AnchorPoint = Vector2.new(0.5,0.5);
+			Selected.BorderSizePixel = 0;
+			Selected.BackgroundColor3 = Color3.fromRGB(34,32,32);
+			Selected.Position = UDim2.new(0, 97, 0.536, 0);
+			Selected.Size = UDim2.fromOffset(181, 14);
+			Selected.Font = Library.Font;
+			Selected.Text = tostring(Title or "Button");
+			Selected.TextColor3 = Library.FontColor;
+			Selected.FontSize = Enum.FontSize.Size8;
+			Selected.AutoButtonColor = false;
+			Selected.Parent = btn;
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 3);
+			RounderCornerUI.Parent = Selected;
+			
+			function toggleFuncs:AddButton(Title, Callback)
+				Callback = Callback or function() end;
+
+				Selected.Size = UDim2.new(0, 180/2 - 2, 0, 14);
+				Selected.Position = UDim2.new(0, 98/2 + 2, 0.6, 0);
+				
+				local Selected2 = Instance.new("TextButton");
+				Selected2.AnchorPoint = Vector2.new(0.5,0.5);
+				Selected2.BorderSizePixel = 0;
+				Selected2.AutoButtonColor = false;
+				Selected2.BackgroundColor3 = Color3.fromRGB(34,32,32);
+				Selected2.Position = UDim2.new(0, 98/2 + (180/2 - 2) + 7 , 0.6, 0);
+				Selected2.Size = UDim2.fromOffset(180/2 - 2, 14);
+				Selected2.Font = Library.Font;
+				Selected2.Text = tostring(Title or "Button");
+				Selected2.TextColor3 = Library.FontColor;
+				Selected2.FontSize = Enum.FontSize.Size8;
+				Selected2.Parent = btn;
+
+				local RounderCornerUI = Instance.new("UICorner");
+				RounderCornerUI.CornerRadius = UDim.new(0, 3);
+				RounderCornerUI.Parent = Selected2;
+				
+				Selected2.MouseButton1Down:Connect(function()
+					local success, err = pcall(Callback)
+					if not success then
+						warn(err);
+					end
+				end)
+				
+			end
+
+			Selected.MouseButton1Down:Connect(function()
+				local success, err = pcall(Callback)
+				if not success then
+					warn(err);
+				end
+			end)
+
+
+			return toggleFuncs;
+		end
+		
+		function sFuncs:Text(Title, default, IconId, Callback)
+			local toggleFuncs = {
+			};
+			Callback = Callback or function() end;
+
+			local btn = Instance.new("TextButton");
+			btn.AutoButtonColor = false;
+			btn.BackgroundTransparency = 1;
+			btn.Size = UDim2.fromOffset(215, 0);
+			btn.AutomaticSize = Enum.AutomaticSize.Y;
+			btn.Text = "";
+			btn.Parent = OptionsHolder;
+			toggleFuncs.MainFrames = {btn};
+
+			local Selected = Instance.new("TextBox");
+			Selected.AnchorPoint = Vector2.new(0.5,0);
+			Selected.BorderSizePixel = 0;
+			Selected.BackgroundColor3 = Color3.fromRGB(34,32,32);
+			Selected.Position = UDim2.fromOffset(98, 16);
+			Selected.Size = UDim2.fromOffset(180, 14);
+			Selected.Font = Enum.Font.GothamBold;
+			Selected.Text = "   "..tostring(default or "Input here...");
+			Selected.TextColor3 = Color3.fromRGB(139, 138, 147);
+			Selected.FontSize = Enum.FontSize.Size10;
+			Selected.TextXAlignment = Enum.TextXAlignment.Left;
+			Selected.Parent = btn;
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 3);
+			RounderCornerUI.Parent = Selected;
+			
+			local DropImgBG = Instance.new("Frame");
+			DropImgBG.AnchorPoint = Vector2.new(0.5,0);
+			DropImgBG.BorderSizePixel = 0;
+			DropImgBG.BackgroundColor3 = Color3.fromRGB(34,32,32);
+			DropImgBG.Position = UDim2.fromOffset(198, 16);
+			DropImgBG.Size = UDim2.fromOffset(14, 14);
+			DropImgBG.Parent = btn;
+
+			local DropImg = Instance.new("ImageLabel");
+			DropImg.AnchorPoint = Vector2.new(0.5,0.5);
+			DropImg.BorderSizePixel = 0;
+			DropImg.BackgroundTransparency = 1;
+			DropImg.Position = UDim2.fromScale(0.5, 0.5);
+			DropImg.Size = UDim2.new(1,-4,1,-4);
+			DropImg.Image = "rbxassetid://"..tostring(IconId or "6034818379"):gsub("rbxassetid://", "");
+			DropImg.ScaleType = Enum.ScaleType.Fit
+			DropImg.ImageColor3 = Library.PrimaryColor;
+			DropImg.Parent = DropImgBG;
+
+			PrimaryColors[DropImg] = {"ImageColor3"};
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 3);
+			RounderCornerUI.Parent = DropImgBG;
+
+			local TogTitle = Instance.new("TextLabel");
+			TogTitle.BackgroundTransparency = 1;
+			TogTitle.Position = UDim2.new(0,8,0,2);
+			TogTitle.Size = UDim2.new(0, 79, 0, 13);
+			TogTitle.Font = Library.Font;
+			TogTitle.Text = tostring(Title or "Dropdown");
+			TogTitle.FontSize = Enum.FontSize.Size10;
+			TogTitle.TextColor3 = Library.FontColor;
+			TogTitle.TextXAlignment = Enum.TextXAlignment.Left;
+			TogTitle.TextYAlignment = Enum.TextYAlignment.Top;
+			TogTitle.Parent = btn;
+			
+			Selected.FocusLost:Connect(function()
+				pcall(Callback, Selected.Text)
+			end)
+
+
+			return toggleFuncs;
+		end
+		
+		function sFuncs:Colorpicker(Title, default, Callback)
+			local toggleFuncs = {
+				Enabled = false;	
+				tweenTime = 0.2;
+				DroppedFrame = nil;
+				cooldown = 0.5;
+				lastTimed = 0;
+				MainFrames = nil;
+			};
+
+			local btn = Instance.new("TextButton");
+			btn.AutoButtonColor = false;
+			btn.BackgroundTransparency = 1;
+			btn.Size = UDim2.fromOffset(215, 15);
+			btn.Text = "";
+			btn.Parent = OptionsHolder;
+
+
+			local OutlineIcon = Instance.new("ImageLabel");
+			OutlineIcon.BackgroundTransparency = 1;
+			OutlineIcon.Position = UDim2.new(0,8,0,7)
+			OutlineIcon.Image = "rbxassetid://8370469048";
+			OutlineIcon.ImageColor3 = Library.SecondaryColor;
+			OutlineIcon.Size = UDim2.fromOffset(14,14)
+			OutlineIcon.AnchorPoint = Vector2.new(0,0.5)
+			OutlineIcon.Parent = btn;
+
+			SecondaryColors[OutlineIcon] = {"ImageColor3"};
+
+			local InnerIcon = Instance.new("Frame");
+			InnerIcon.BackgroundColor3 = default or Library.PrimaryColor;
+			InnerIcon.AnchorPoint = Vector2.new(0.5,0.5);
+			InnerIcon.Position = UDim2.fromScale(0.5,0.5);
+			InnerIcon.Size = UDim2.new(1,-2,1,-2)
+			InnerIcon.BackgroundTransparency = 0
+			InnerIcon.Parent = OutlineIcon;
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 2);
+			RounderCornerUI.Parent = InnerIcon;
+
+			local TogTitle = Instance.new("TextLabel");
+			TogTitle.AnchorPoint = Vector2.new(0,0.5)
+			TogTitle.BackgroundTransparency = 1;
+			TogTitle.Position = UDim2.new(0,30,0,7);
+			TogTitle.Size = UDim2.new(0, 146, 0, 15)
+			TogTitle.Font = Library.Font;
+			TogTitle.Text = tostring(Title or "Color picker");
+			TogTitle.FontSize = Enum.FontSize.Size10;
+			TogTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+			TogTitle.TextXAlignment = Enum.TextXAlignment.Left;
+			TogTitle.Parent = btn;
+			
+			
+			local CPHold = Instance.new("Frame");
+			CPHold.BackgroundTransparency = 1;
+			CPHold.Size = UDim2.fromOffset(196, 0); -- 50 Y;
+			CPHold.Position = UDim2.new(0.5, 0, 0, 0)
+			CPHold.AnchorPoint = Vector2.new(0.5, 0)
+			CPHold.ClipsDescendants = true;
+			CPHold.Parent = btn;
+			toggleFuncs.MainFrames = {CPHold, btn};
+			
+			local ColorBG = Instance.new("Frame");
+			ColorBG.AnchorPoint = Vector2.new(0.5,0.5);
+			ColorBG.BackgroundColor3 = Color3.fromRGB(34, 32, 32);
+			ColorBG.BorderSizePixel = 0;
+			ColorBG.Position = UDim2.fromOffset(97, 0);
+			ColorBG.Size = UDim2.fromOffset(180,0);
+			ColorBG.BackgroundTransparency = 1
+			ColorBG.Parent = CPHold;
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 4);
+			RounderCornerUI.Parent = ColorBG;
+			
+			local CustomHex = Instance.new("TextBox");
+			CustomHex.AnchorPoint = Vector2.new(0.5, 0);
+			CustomHex.BackgroundColor3 = Color3.fromRGB(49, 46, 46);
+			CustomHex.BorderSizePixel = 0;
+			CustomHex.Position = UDim2.fromOffset(97, 0);
+			CustomHex.Size = UDim2.fromOffset(154, 0);
+			CustomHex.Font = Library.Font;
+			CustomHex.FontSize = Enum.FontSize.Size10;
+			CustomHex.PlaceholderText = "Custom Color";
+			CustomHex.TextColor3 = Color3.fromRGB(161, 161, 161);
+			CustomHex.Text = "Custom Color";
+			CustomHex.Parent = CPHold
+
+			local RounderCornerUI = Instance.new("UICorner");
+			RounderCornerUI.CornerRadius = UDim.new(0, 4);
+			RounderCornerUI.Parent = CustomHex;
+			
+			local Grid = Instance.new("UIGridLayout");
+			Grid.CellPadding = UDim2.fromOffset(7, 5);
+			Grid.CellSize = UDim2.fromOffset(12, 12);
+			Grid.FillDirection = Enum.FillDirection.Horizontal;
+			Grid.HorizontalAlignment = Enum.HorizontalAlignment.Center;
+			Grid.SortOrder = Enum.SortOrder.Name;
+			Grid.Parent = ColorBG;
+			
+			local Padding = Instance.new("UIPadding");
+			Padding.PaddingTop = UDim.new(0, 7);
+			Padding.Parent = ColorBG;
+			
+			local colors = {
+				Color3.fromRGB(71, 67, 254);
+				Color3.fromRGB(0, 143, 252);
+				Color3.fromRGB(0, 99, 175);
+				Color3.fromRGB(8, 184, 175);
+				Color3.fromRGB(1, 184, 109);
+				Color3.fromRGB(221, 188, 17);
+				Color3.fromRGB(244, 62, 93);
+				Color3.fromRGB(236, 0, 58);
+				Color3.fromRGB(173, 14, 14);
+			}
+			local colorBtns = {}
+			
+			table.foreach(colors, function(index, color)
+				local colorFrame = Instance.new("TextButton");
+				colorFrame.AnchorPoint = Vector2.new(0.5, 0.5);
+				colorFrame.BackgroundTransparency = 1;
+				colorFrame.BackgroundColor3 = color;
+				colorFrame.BorderSizePixel = 0;
+				colorFrame.Text = "";
+				colorFrame.Name = index
+				colorFrame.Parent = ColorBG;
+				colorFrame.AutoButtonColor = false;
+				table.insert(colorBtns, colorFrame)
+
+				local RounderCornerUI = Instance.new("UICorner");
+				RounderCornerUI.CornerRadius = UDim.new(0, 10);
+				RounderCornerUI.Parent = colorFrame;
+				
+				colorFrame.MouseButton1Down:Connect(function()
+					InnerIcon.BackgroundColor3 = color
+					toggleFuncs:Close()
+					pcall(Callback, color)
+				end)
+			end)
+			
+			local function hex2rgb(hex)
+				hex = hex:gsub("#","")
+				local r = tonumber("0x"..hex:sub(1,2))
+				local g = tonumber("0x"..hex:sub(3,4))
+				local b = tonumber("0x"..hex:sub(5,6))
+				return Color3.fromRGB(r,g,b)
+			end
+			
+			CustomHex.FocusLost:Connect(function()
+				local success, newrgb = pcall(hex2rgb, CustomHex.Text)
+				if success and newrgb then
+					InnerIcon.BackgroundColor3 = newrgb
+					pcall(Callback, newrgb)
+					toggleFuncs:Close()
+				end
+			end)
+
+			function toggleFuncs:Close()
+				toggleFuncs.Enabled = false;
+				TS:Create(btn, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.fromOffset(215, 15)}):Play();
+				TS:Create(CPHold, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.fromOffset(196, 0), Position = UDim2.new(0.5, 0, 0, 0)}):Play();
+				TS:Create(ColorBG, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.fromOffset(180, 0), Position = UDim2.fromOffset(97, 0)}):Play();
+				TS:Create(ColorBG, ti(toggleFuncs.tweenTime - 0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play();
+				TS:Create(CustomHex, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.fromOffset(154, 0), Position = UDim2.fromOffset(97, 0), BackgroundTransparency = 1, TextTransparency = 1}):Play();
+				
+				for _, colorFrame in ipairs(colorBtns) do
+					TS:Create(colorFrame, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 1}):Play();
+				end
+			end
+
+
+			function toggleFuncs:Open()
+				if toggleFuncs.lastTimed + toggleFuncs.cooldown > os.time() then return end
+				toggleFuncs.lastTimed = os.time();
+				if toggleFuncs.Enabled then
+					toggleFuncs:Close()
+				else
+					toggleFuncs.Enabled = true;
+					TS:Create(btn, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.fromOffset(215, 15 + 56)}):Play();
+					TS:Create(CPHold, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.fromOffset(196, 50), Position = UDim2.new(0.5, 0, 0, 22)}):Play();
+					TS:Create(ColorBG, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.fromOffset(180, 45), Position = UDim2.fromOffset(97, 24), BackgroundTransparency = 0}):Play();
+					TS:Create(CustomHex, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Size = UDim2.fromOffset(154, 14), Position = UDim2.fromOffset(97, 29), BackgroundTransparency = 0, TextTransparency = 0}):Play();
+					
+					for _, colorFrame in ipairs(colorBtns) do
+						TS:Create(colorFrame, ti(toggleFuncs.tweenTime, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {BackgroundTransparency = 0}):Play();
+					end
+				end
+			end
+
+			table.insert(Library.thingsToClose, toggleFuncs)
+
+			btn.MouseButton1Down:Connect(toggleFuncs.Open)
+
+			return toggleFuncs;
+		end
+		
+		return sFuncs;
+	end
+	
+	function Funcs:Open()
+		Funcs.isOpen = true;
+		
+		SecondaryColors[IconImg] = nil;
+		PrimaryColors[IconImg] = {"ImageColor3"};
+		
+		TS:Create(TabButton, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageColor3 = Color3.fromRGB(255, 255, 255), Size = UDim2.fromOffset(77, 31)}):Play();
+		TS:Create(TabTitle, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {Size = UDim2.fromOffset(33,14)}):Play();
+		TS:Create(IconImg, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageColor3 = Library.PrimaryColor}):Play();
+
+		CoverBG.Position = UDim2.fromScale(0, 0.5);
+		CoverBG:TweenSize(UDim2.fromScale(1,1), Enum.EasingDirection.Out, Enum.EasingStyle.Sine, Funcs.tweenTime - 0.1);
+		
+		coroutine.resume(coroutine.create(function()
+			task.wait(Funcs.tweenTime - 0.1);
+			
+			for _, tab in ipairs(Library.Tabs) do
+				if tab.TabButton ~= TabButton then
+					tab.Funcs:Close();
+				end
+			end
+
+			ContentBG.Visible = true;
+
+			CoverBG:TweenSizeAndPosition(UDim2.fromScale(0,1), UDim2.fromScale(1,0.5), Enum.EasingDirection.Out, Enum.EasingStyle.Sine, Funcs.tweenTime - 0.1);
+		end))
+
+		task.wait(Funcs.tweenTime)
+
+		TS:Create(TabTitle, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {TextTransparency = 0}):Play();
+	end
+
+	function Funcs:Close()
+		Funcs.isOpen = false;
+		
+		ContentBG.Visible = false;
+
+		PrimaryColors[IconImg] = nil;
+		SecondaryColors[IconImg] = {"ImageColor3"};
+		
+		TS:Create(TabTitle, ti(Funcs.tweenTime - 0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {TextTransparency = 1}):Play();
+
+		wait(Funcs.tweenTime - 0.1)
+
+		TS:Create(TabButton, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {ImageColor3 = Color3.fromRGB(229, 229, 229), Size = UDim2.fromOffset(29, 31)}):Play();
+		TS:Create(IconImg, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {ImageColor3 = Library.SecondaryColor}):Play();
+		TS:Create(TabTitle, ti(Funcs.tweenTime, Enum.EasingStyle.Sine, Enum.EasingDirection.In), {Size = UDim2.fromOffset(0,14)}):Play();
+	end
+
+	TabButton.MouseButton1Down:Connect(function()
+		if not Funcs.isOpen and Funcs.lastChanged + Funcs.cooldown <= os.time() then
+			Funcs.lastChanged = os.time();
+			Funcs:Open();
+		end
+	end)
+	
+	table.insert(Library.Tabs, {
+		TabButton = TabButton;
+		ContentBG = ContentBG,
+		Funcs = Funcs;
+	})
+	
+	return Funcs;
+	
+end
+
+function Library:Init(tab)
+	if tab and type(tab) == 'table' and rawget(tab, "Funcs") then
+		tab.Funcs:Open();
+	end
+	
+	local Search = Library:CreateSearch("Search", 6031154871)
+end
+
+return Library
